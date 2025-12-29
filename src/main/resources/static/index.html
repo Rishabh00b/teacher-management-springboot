@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Teacher Management</title>
+
+    <style>
+        * {
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Arial, sans-serif;
+        }
+
+        body {
+            background: #0f172a;
+            color: #e5e7eb;
+            margin: 0;
+            padding: 0;
+        }
+
+        h1 {
+            text-align: center;
+            margin: 25px 0;
+            color: #38bdf8;
+        }
+
+        .container {
+            width: 90%;
+            max-width: 1000px;
+            margin: auto;
+            background: #020617;
+            padding: 25px;
+            border-radius: 12px;
+            box-shadow: 0 0 25px rgba(56,189,248,0.15);
+        }
+
+        .form-group {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        input {
+            flex: 1;
+            padding: 14px;
+            border-radius: 8px;
+            border: 1px solid #1e293b;
+            background: #020617;
+            color: white;
+            font-size: 15px;
+        }
+
+        input:focus {
+            outline: none;
+            border-color: #38bdf8;
+        }
+
+        .btn-group {
+            display: flex;
+            gap: 12px;
+            margin-bottom: 25px;
+        }
+
+        button {
+            padding: 10px 22px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: 0.3s;
+        }
+
+        .add-btn { background: #22c55e; }
+        .update-btn { background: #38bdf8; }
+        .delete-btn { background: #ef4444; color: white; }
+        .edit-btn { background: #38bdf8; }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        th, td {
+            padding: 14px;
+            text-align: center;
+            border-bottom: 1px solid #1e293b;
+        }
+
+        th {
+            color: #38bdf8;
+        }
+
+        tr:hover {
+            background: #020617;
+        }
+    </style>
+</head>
+
+<body>
+
+<h1>👨‍🏫 Teacher Management</h1>
+
+<div class="container">
+
+    <!-- hidden id -->
+    <input type="hidden" id="teacherId">
+
+    <div class="form-group">
+        <input type="text" id="teacherName" placeholder="Teacher Name">
+        <input type="text" id="subject" placeholder="Subject">
+    </div>
+
+    <div class="btn-group">
+        <button class="add-btn" onclick="addTeacher()">Add</button>
+        <button class="update-btn" onclick="updateTeacher()">Update</button>
+    </div>
+
+    <table>
+        <thead>
+        <tr>
+            <th>ID</th>
+            <th>Name</th>
+            <th>Subject</th>
+            <th>Action</th>
+        </tr>
+        </thead>
+        <tbody id="table"></tbody>
+    </table>
+
+</div>
+
+<script>
+    const API = "http://localhost:6969/teachers";
+
+    function loadTeachers() {
+        fetch(API)
+            .then(res => res.json())
+            .then(data => {
+                const table = document.getElementById("table");
+                table.innerHTML = "";
+
+                data.forEach(t => {
+                    table.innerHTML += `
+                        <tr>
+                            <td>${t.id}</td>
+                            <td>${t.name}</td>
+                            <td>${t.subject}</td>
+                            <td>
+                                <button class="edit-btn"
+                                    onclick="editTeacher(${t.id}, '${t.name}', '${t.subject}')">
+                                    Edit
+                                </button>
+                                <button class="delete-btn"
+                                    onclick="deleteTeacher(${t.id})">
+                                    Delete
+                                </button>
+                            </td>
+                        </tr>
+                    `;
+                });
+            });
+    }
+
+    function addTeacher() {
+        fetch(API, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+                name: document.getElementById("teacherName").value,
+                subject: document.getElementById("subject").value
+            })
+        }).then(clearForm);
+    }
+
+    function updateTeacher() {
+        const id = document.getElementById("teacherId").value;
+        if (!id) {
+            alert("Select a teacher to update");
+            return;
+        }
+
+        fetch(`${API}/${id}`, {
+            method: "PUT",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+                name: document.getElementById("teacherName").value,
+                subject: document.getElementById("subject").value
+            })
+        }).then(clearForm);
+    }
+
+    function deleteTeacher(id) {
+        fetch(`${API}/${id}`, { method: "DELETE" })
+            .then(loadTeachers);
+    }
+
+    /* ✅ FIXED EDIT FUNCTION (THIS WAS THE BUG) */
+    function editTeacher(id, name, subject) {
+        document.getElementById("teacherId").value = id;
+        document.getElementById("teacherName").value = name;
+        document.getElementById("subject").value = subject;
+    }
+
+    function clearForm() {
+        document.getElementById("teacherId").value = "";
+        document.getElementById("teacherName").value = "";
+        document.getElementById("subject").value = "";
+        loadTeachers();
+    }
+
+    loadTeachers();
+</script>
+
+</body>
+</html>
